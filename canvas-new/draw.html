@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>绘图板</title>
+		<style type="text/css">
+			.box {
+				width: 1000px;
+				height: 600px;
+				margin: 0 auto;
+				border: 2px solid black;
+			}
+
+			.palette {
+				width: 200px;
+				height: 100%;
+				float: left;
+				border-right: 2px solid black;
+				box-sizing: border-box;
+				overflow: hidden;
+			}
+
+			label {
+				display: block;
+				width: 100%;
+				margin-top: 10px;
+				text-align: center;
+				padding-bottom: 10px;
+				border-bottom: 1px dotted #CCCCCC;
+			}
+			label span {
+				display: block;
+				width: 100%;
+				height: 40px;
+				font-size: 20px;
+				text-align: center;
+			}
+			input{
+				cursor: pointer;
+
+			}
+			label select {
+				display: block;
+				margin: 0 auto;
+				width: 50%;
+				height: 40px;
+				cursor: pointer;
+			}
+			label.sides{
+				display: none;
+			}
+			.palette-content{
+				float: right;
+				width: 800px;
+				height:100%;
+				background: url("img/bgImg.jpg") no-repeat center center;
+				background-size:100% 100%;
+				position: relative;
+				overflow: hidden;
+			}
+			canvas {
+				background: #ffffff;
+				display: block;
+				position: absolute;
+				left:0;
+				right:0;
+				top:0;
+				bottom:0;
+				margin:auto;
+			}
+			.btn{
+				cursor: pointer;
+				outline: none;
+				width: 180px;
+				height:40px;
+				border: 2px solid cyan;
+				border-radius: 10px;
+				background: #caeb00;
+				line-height: 40px;
+				text-align: center;
+				margin-bottom: 2px;
+				margin-left: 4px;
+				cursor: pointer;
+			}
+			.btn:hover{
+				background: #29eb71;
+				color:#fff;
+			}
+			.btn:active{
+				box-shadow: 0px 0px 2px 2px #30ccb3;
+			}
+		</style>
+	</head>
+
+	<body>
+		<div class="box">
+			<div class="palette">
+				<label>
+					<span>形状</span>
+					<select name="" id="shape" size="1">
+            			<option value="rect">矩形</option>
+           				<option value="circle">圆形</option>
+            			<option value="line">直线</option>
+            			<option value="poly">多边形</option>
+						<option value="imaline">虚线</option>
+        			</select>
+				</label>
+				<label class="sides">
+					<span>边数</span>
+					<input type="number" min="3" id="number" value="3" />
+				</label>
+				<label>
+					<span>方式</span>
+					<input type="radio" name="type" id="" value="stroke" checked=""/>描边
+					<input type="radio" name="type" id="" value="fill" />填充
+				</label>
+				<label >
+					<span>宽度</span>
+					 <input type="range" min="2" max="10" step="2" id="width" value="2">
+				</label>
+				<label>
+					<span>颜色</span>
+					<input type="color" id="color"/>
+				</label>
+				<label>
+					<div class="btn repeal">撤销</div>
+					<div class="btn clear">清空</div>
+					<div class="btn restart">重画</div>
+					<div class="btn preserve">保存</div>
+				</label>
+			</div>
+			<div class="palette-content">
+				<canvas  width="500" height="500">
+				</canvas>
+			</div>
+		</div>
+		<script src="js/draw.js" charset="utf-8"></script>
+		<script type="text/javascript">
+			let shapeObj = document.querySelector("#shape");
+			let shape = "rect";
+			let typeObj = document.querySelectorAll("[name='type']");
+			let type = "stroke"
+			let widthObj = document.querySelector("#width");
+			let width = 1;
+			let colorObj = document.querySelector("#color");
+			let color = "#000"
+			let clear=document.querySelector(".clear");
+			let repeal=document.querySelector(".repeal");
+			let restart=document.querySelector(".restart");
+			let preserve=document.querySelector(".preserve");
+			let sidesObj=document.querySelector(".sides");
+			let numberObj=document.querySelector("#number");
+			let sides=3;
+			shapeObj.onchange = function() {
+				shape = this.value;
+				if(this.value==="poly"){
+					sidesObj.style.display="block";
+				}else{
+					sidesObj.style.display="none";
+				}
+			}
+			numberObj.onchange=function(){
+				sides=this.value;
+			}
+			typeObj.forEach(function(val, index) {
+				val.onclick = function() {
+					type = this.value;
+				}
+			})
+			widthObj.onchange = function() {
+				width = this.value;
+			}
+			colorObj.onchange = function() {
+				color = this.value;
+			};
+			let Cwidth=document.querySelector("canvas").offsetWidth;
+            let Cheight=document.querySelector("canvas").offsetHeight;
+			clear.onmouseup=function(){
+				cobj.clearRect(0, 0, 500, 500);
+				imgData.push(cobj.getImageData(0, 0, 500, 500))
+				
+			}
+			repeal.onmouseup=function(){
+				if(imgData.length===1){
+					alert("无法继续撤销");
+					return
+				}
+				imgData.pop()
+				cobj.putImageData(imgData[imgData.length-1],0,0)
+				
+			}
+			restart.onmouseup=function(){
+				cobj.clearRect(0, 0, 500, 500)
+				imgData = [cobj.getImageData(0, 0, 500, 500)]
+			};
+
+
+			let canvas = document.querySelector("canvas");
+			let cobj = canvas.getContext("2d")
+			let imgData = [cobj.getImageData(0, 0, 500, 500)];
+            //保存
+            preserve.onclick=function(){
+                downloadimage();
+			}
+            function downloadimage(event)
+            {
+// 图片导出为 png 格式
+                var type = 'png';
+// 返回一个包含JPG图片的<img>元素
+                var img_png_src = canvas.toDataURL("image/png");  //将画板保存为图片格式的函数
+// 加工image data，替换mime type
+                imgData = img_png_src.replace(_fixType(type),'image/octet-stream');
+// 下载后的问题名
+                var filename = '画板_' + (new Date()).getTime() + '.' + type;
+// download
+                saveFile(imgData,filename);
+            }
+
+            var saveFile = function(data, filename){
+                var save_link = document.createElementNS('http://www.w3.org/1999/xhtml', 'a');
+                save_link.href = data;
+                save_link.download = filename;
+
+                var event = document.createEvent('MouseEvents');
+                event.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+                save_link.dispatchEvent(event);
+            };
+            var _fixType = function(type) {
+                type = type.toLowerCase().replace(/jpg/i, 'jpeg');
+                var r = type.match(/png|jpeg|bmp|gif/)[0];
+                return 'image/' + r;
+            };
+			canvas.onmousedown = function(e) {
+				let [sx, sy] = [e.offsetX, e.offsetY];
+				let drawObj = new Draw(cobj, {
+					shape,
+					type,
+					width,
+					color,
+					sides,
+                    Cwidth,
+                    Cheight
+				})
+				canvas.onmousemove = function(e) {
+					cobj.clearRect(0, 0, 500, 500)
+					let [ox, oy] = [e.offsetX, e.offsetY]
+//					cobj.putImageData(imgData, 0, 0)
+					cobj.putImageData(imgData[imgData.length-1],0,0)
+					drawObj[shape](sx, sy, ox, oy,sides)
+				}
+				canvas.onmouseup = function() {
+					canvas.onmousemove = null;
+					canvas.onmouseup = null;
+					imgData.push(cobj.getImageData(0, 0, 500, 500))
+				}
+			}
+		</script>
+	</body>
+
+</html>
